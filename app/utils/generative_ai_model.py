@@ -6,8 +6,8 @@ from langchain_anthropic import ChatAnthropic
 
 class GenerativeAIModel(Enum):
     GPT_4O = "gpt-5-nano"
-    GEMINI_PRO = "gemini-2.5-flash"
-    CLAUDE_SONNET = "claude-sonnet-4-20250514"
+    GEMINI_PRO = "gemini-2.5-pro"
+    CLAUDE_SONNET = "claude-3-7-sonnet-20250219"
 
 def set_llm(llm_name):
     if llm_name == GenerativeAIModel.GPT_4O.value:
