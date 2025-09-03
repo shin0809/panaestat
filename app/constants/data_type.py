@@ -1,0 +1,1 @@
+FETCH_DATA_TYPE = ["チャット表示用データ", "Excel", "CSV", "PDF"]

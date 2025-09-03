@@ -1,0 +1,26 @@
+credentials:
+  usernames:
+    john@example.com:
+      name: "John"
+      email: "john@example.com"
+      password: "5-xRWKCzk|)UM-A!Cgzd"
+    naoki@example.com:
+      name: "Naoki"
+      email: "naoki@example.com"
+      password: "&xANx|2jm)rGp2uD-fTM"
+    test@test.com:
+      name: "test"
+      email: "test@test.com"
+      password: "PNt)A&Lpd25Z-BFCHCXh"
+    yuasa.shingo@jp.panasonic.com:
+      name: "yuasa shingo"
+      email: "yuasa.shingo@jp.panasonic.com"
+      password: "Fb9Te~!g9xcUYeZ(q5W"
+    user@example.com:
+      name: "default user"
+      email: "user@example.com"
+      password: "cSZ5kvMiqW-z"
+cookie:
+  name: "authentication"
+  key: "auth_key"
+  expiry_days: 1

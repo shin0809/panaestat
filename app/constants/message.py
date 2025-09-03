@@ -1,0 +1,1 @@
+PANDAS_AI_ERROR_MESSAGE = "Unfortunately, I was not able to answer your question, because of the following error:"

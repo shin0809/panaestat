@@ -1,0 +1,32 @@
+# version: '3.8'
+
+services:
+  app:
+    # Dockerfileからのビルド設定
+    build:
+      context: . # ビルドコンテキストをプロジェクトルートに設定
+      dockerfile: docker/Dockerfile # Dockerfileの場所を指定
+
+    # ボリュームマウント設定
+    volumes:
+      - .:/app # ローカルの全ファイルをコンテナの/appにマウント
+      - ./settings/.env:/app/settings/.env:ro
+      - ./settings/users.csv:/app/settings/users.csv:ro # ユーザ追加をcsvファイルで管理する場合
+#      - ./settings/users.yaml:/app/settings/users.yaml:ro # ユーザ追加をyamlファイルで管理する場合
+    env_file:
+      - settings/.env
+    # ポート設定
+    ports:
+      - "8501:8501" # Streamlitのデフォルトポート
+
+    # 環境変数設定
+    environment:
+      - PYTHONPATH=/app # Pythonがアプリケーションのモジュールを見つけられるようにする
+      - ENV=development # 環境設定
+      # 必要に応じて他の環境変数を追加
+
+      # 開発用コマンド（DockerfileのCMDをオーバーライド）
+    command: streamlit run app/main.py --server.port=8501 --server.address=0.0.0.0
+
+    # コンテナの再起動ポリシー
+    restart: unless-stopped # コンテナが異常終了した場合に自動再起動

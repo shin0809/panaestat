@@ -1,0 +1,10 @@
+credentials:
+  usernames:
+    john@example.com: # ログイン次に使うid
+      name: "John" #必須項目name
+      email: "john@example.com" # 必須項目email
+      password: "password123" # 必須項目password
+cookie:
+  name: "authentication"
+  key: "auth_key"
+  expiry_days: 1
