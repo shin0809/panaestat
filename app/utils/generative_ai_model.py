@@ -12,8 +12,9 @@ class GenerativeAIModel(Enum):
 def set_llm(llm_name):
     if llm_name == GenerativeAIModel.GPT_4O.value:
         return ChatOpenAI(
-            model=llm_name,
-            temperature=0
+            model=llm_name
+#            model=llm_name,
+#            temperature=0
         )
     elif llm_name == GenerativeAIModel.GEMINI_PRO.value:
         return ChatGoogleGenerativeAI(
