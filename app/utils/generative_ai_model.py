@@ -5,7 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_anthropic import ChatAnthropic
 
 class GenerativeAIModel(Enum):
-    GPT_4O = "gpt-5-nano"
+    GPT_4O = "gpt-4o"
     GEMINI_PRO = "gemini-2.5-pro"
     CLAUDE_SONNET = "claude-3-7-sonnet-20250219"
 
