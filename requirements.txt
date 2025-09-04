@@ -7,7 +7,7 @@ openai==1.61.1
 langchain==0.3.25
 langchain-openai==0.3.6
 langchain-community==0.3.25
-langchain-core==0.3.59
+langchain-core==0.3.65
 langchain_anthropic==0.3.7
 langchain_google_genai==2.0.9
 pydantic==2.9.2
