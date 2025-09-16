@@ -1,6 +1,12 @@
 import streamlit as st
 
-from constants import LLM_OPTIONS, FETCH_DATA_TYPE, SAVE_DATA_OPTIONS, DEFAULT_ESTAT_DATA_LIMIT, DEFAULT_USD_JPY_RATE
+from constants import (
+    LLM_OPTIONS, 
+    SAVE_DATA_OPTIONS,
+    DEFAULT_ESTAT_DATA_LIMIT,
+    DEFAULT_USD_JPY_RATE,
+    FetchDataType
+)
 from utils import GenerativeAIModel
 
 def initialize_session_state():
@@ -13,7 +19,7 @@ def initialize_session_state():
     if "model_name" not in st.session_state:
         st.session_state.model_name = GenerativeAIModel.GPT_4O.value
     if "fetch_data_type" not in st.session_state:
-        st.session_state.fetch_data_type = FETCH_DATA_TYPE[0]
+        st.session_state.fetch_data_type = FetchDataType.ESTAT_API.value
     if "user_data" not in st.session_state:
         st.session_state.user_data = {
             "name": None,
@@ -40,6 +46,8 @@ def initialize_session_state():
                 "output_cost": 0,
             },
         }
+    if "serp_api_results" not in st.session_state:
+        st.session_state.serp_api_results = []
 
 def set_model_name(model_name):
     if model_name == LLM_OPTIONS[0]:
@@ -174,3 +182,9 @@ def set_llm_input_cost(cost: int, model_name: str):
 
 def set_llm_output_cost(cost: int, model_name: str):
     st.session_state.llm_costs[model_name]["output_cost"] += cost
+
+def set_serp_api_results(contents: list):
+    st.session_state.serp_api_results = contents
+
+def get_serp_api_results():
+    return st.session_state.serp_api_results

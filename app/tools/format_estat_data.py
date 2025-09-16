@@ -10,7 +10,7 @@ from pandasai.helpers.openai_info import get_openai_callback
 from constants import PANDAS_AI_ERROR_MESSAGE, SAVE_DATA_OPTIONS, FORMAT_ESTAT_DATA_PROMPT
 from views import StatDataViewer
 from utils import is_estat_data, GenerativeAIModel
-from session import set_agent_message, get_save_data_option, set_llm_input_cost, set_llm_output_cost
+from session import set_agent_message, get_save_data_option, set_llm_input_cost, set_llm_output_cost, get_model_name
 
 @tool
 def format_estat_data(user_query: str) -> str:
@@ -43,18 +43,21 @@ def format_estat_data(user_query: str) -> str:
     display_type = message.get("display_type")
     if display_type is not None:
         viewer.display_type = display_type
+    
+    if get_model_name() is not GenerativeAIModel.GPT_4O.value:
+        st.info("データの整形にはGPT-4oを使用します。")
 
     agent = Agent(
         viewer.df,
         config={
-            "llm": OpenAI(),
+            "llm": OpenAI(model_name="gpt-4o"),
             "custom_whitelisted_dependencies": ["plotly"],
         }
     )
     with get_openai_callback() as cb:
         result = agent.chat(FORMAT_ESTAT_DATA_PROMPT.format(user_query=user_query))
         
-        # logging.info(f"response: {result}")
+        # logging.csv_info(f"response: {result}")
         
         prompt_tokens = cb.prompt_tokens
         completion_tokens = cb.completion_tokens

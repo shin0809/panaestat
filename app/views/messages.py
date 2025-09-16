@@ -14,7 +14,21 @@ def display_messages():
             if not is_stat_data:
                 if with_btns:
                     # urlボタンの表示
-                    EstatUrlBtn(message["content"], index).display_btns()
+                    urls = message["content"]["urls"]
+                    next_data_index = message["content"]["next_data_index"]
+                    total_data_count = message["content"]["total_data_count"]
+                    # 最新のメッセージの場合に、もっと見るボタンのフラグを立てる
+                    if index == len(st.session_state.messages) - 1:
+                        see_more_btn = True
+                    else:
+                        see_more_btn = False
+                    EstatUrlBtn(
+                        urls=urls,
+                        index=index,
+                        start_data_index=next_data_index,
+                        total_data_count=total_data_count,
+                        see_more_btn=see_more_btn,
+                    ).display_btns()
                 else:
                     # テキストデータの表示
                     st.markdown(message["content"])
@@ -24,9 +38,9 @@ def display_messages():
             if with_file:
                 # ユーザーがアップロードしたファイルの解析結果
                 try:
-                    PandasDataViewer(message["content"]).display_data()
+                    PandasDataViewer(message["content"], index).display_data()
                 except Exception as e:
-                    logging.error(f"failed to display data: {e}")
+                    logging.csv_error(f"failed to display data: {e}")
                     st.warning("データの表示に失敗しました。何度も失敗する場合はリロードしてください。")
             elif is_formatted:
                 # pandasaiによって整形されたデータはStatDataViewerで保存しているのでそのまま表示

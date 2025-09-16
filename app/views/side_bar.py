@@ -21,6 +21,7 @@ from constants import (
     MAX_LOGS_DIR_SIZE_MB,
     DEFAULT_USD_JPY_RATE,
     GenerativeAIModel,
+    FetchDataType,
 )
 from session import (
     set_model_name,
@@ -48,7 +49,7 @@ def init_sidebar(file):
             set_fetch_data_type(fetch_data_type)
             
             # データ取得オプションがe-Stat　APIの場合はe-Statのデータ取得上限を設定する
-            if fetch_data_type == FETCH_DATA_TYPE[0]:
+            if fetch_data_type == FetchDataType.ESTAT_API.value:
                 # e-Statのデータ取得上限
                 estat_data_limit = st.sidebar.number_input("e-Statのデータ取得上限", min_value=1, value=DEFAULT_ESTAT_DATA_LIMIT, max_value=100000, step=1000)
                 set_estat_data_limit(estat_data_limit)
@@ -57,7 +58,7 @@ def init_sidebar(file):
             model_name = st.sidebar.selectbox("生成AIモデル", options=LLM_OPTIONS)
             set_model_name(model_name)
         else:
-            st.sidebar.info("ファイルがアップロードされているため、OpenAIのAPIが適用されます。")
+            st.sidebar.info("ファイルがアップロードされているため、GPT-4oが適用されます。")
             set_model_name(LLM_OPTIONS[0]) # OpenAIを使用
         
         # セッションに統計データを残すかのオプション

@@ -13,7 +13,7 @@ def calc_input_cost(tokens: int, model_name: str):
     if model_name == GenerativeAIModel.GEMINI_PRO.value and tokens > 128000:
         input_price *= 2
     input_cost = _convert_usd_to_jpy(tokens * input_price)
-    logging.info(f"input_cost: {input_cost:.5f}円")
+    logging.csv_info(f"input_cost: {input_cost:.5f}円")
     return input_cost
 
 def calc_output_cost(tokens: int, model_name: str):
@@ -22,7 +22,7 @@ def calc_output_cost(tokens: int, model_name: str):
     if model_name == GenerativeAIModel.GEMINI_PRO.value and tokens > 128000:
         output_price *= 2
     output_cost = _convert_usd_to_jpy(tokens * output_price)
-    logging.info(f"output_cost: {output_cost:.5f}円")
+    logging.csv_info(f"output_cost: {output_cost:.5f}円")
     return output_cost
 
 def calc_input_cost_from_prompt(query: str, model_name: str):

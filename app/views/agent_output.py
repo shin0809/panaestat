@@ -9,8 +9,7 @@ from pandasai.helpers.openai_info import get_openai_callback
 
 from constants import PANDAS_AI_IMG_OUTPUT_PATH, DISPLAY_OPTIONS, PANDAS_AI_ERROR_MESSAGE, GENERATE_CHART_PROMPT
 from utils import extract_data_extension, read_file, is_estat_url, is_estat_data, GenerativeAIModel
-from session import set_agent_message, get_model_name, set_llm_input_cost, set_llm_output_cost
-from views import StatDataViewer, PandasDataViewer, EstatUrlBtn
+from session import set_agent_message, get_model_name, set_llm_input_cost, set_llm_output_cost, set_serp_api_results
 from services import StreamlitCallbackHandler, calc_input_cost_from_prompt, calc_input_cost, calc_output_cost
 
 
@@ -26,7 +25,7 @@ class AgentOutput:
         agentの出力を処理する
         """
         if self.prompt is not None:
-            logging.info(f"prompt: {self.prompt}")
+            logging.csv_info(f"prompt: {self.prompt}")
             if self.file is not None:
                 self._output_with_file()
             else:
@@ -43,7 +42,7 @@ class AgentOutput:
             {'user_input': [self.prompt]},
             config={'callbacks': [callback_handler]}
         )
-        logging.info(f"response: {response}")
+        logging.csv_info(f"response: {response}")
         
         # 入力コストを計算
         input_cost = calc_input_cost_from_prompt(self.prompt, get_model_name())
@@ -73,12 +72,15 @@ class AgentOutput:
         基本的にはDataFrameの形式でPandasDataViewerで表示する
         png形式で出力された場合はエラーとして扱う
         """
+        
+        logging.csv_info(f"uploaded file: {self.file.name}")
+        
         extension = extract_data_extension(self.file)
         
         try:
             df = read_file(self.file, extension, self.header)
         except Exception as e:
-            logging.error(e)
+            logging.csv_error(e)
             st.error("ファイルの読み込みに失敗しました。")
             return
 
@@ -87,7 +89,7 @@ class AgentOutput:
             agent = Agent(
                 df,
                 config={
-                    "llm": OpenAI(),
+                    "llm": OpenAI(model_name="gpt-4o"),
                     "custom_whitelisted_dependencies": ["plotly"],
                 }
             )
@@ -105,7 +107,7 @@ class AgentOutput:
                 output_cost = calc_output_cost(completion_tokens, GenerativeAIModel.GPT_4O.value)
                 set_llm_output_cost(output_cost, GenerativeAIModel.GPT_4O.value)
 
-            # logging.info(f"response: {result}")
+            # logging.csv_info(f"response: {result}")
             st.expander("思考過程").write(agent.explain())
 
             if PANDAS_AI_ERROR_MESSAGE in result:
@@ -124,32 +126,40 @@ class AgentOutput:
                 # 画像で出力されてしまった場合のハンドリング
                 # ファイルを削除する
                 os.remove(PANDAS_AI_IMG_OUTPUT_PATH)
-
-            try:
-                PandasDataViewer(result).display_data()
-            except Exception as e:
-                logging.error(f"failed to display data: {e}")
-                st.warning("データの表示に失敗しました。何度も失敗する場合はリロードしてください。")
+            st.rerun()
 
     def _display_estat_url(self, output):
         """
-        e-StatのURLをボタンで表示する
+        e-StatのURLの概要とURLのボタンを表示する
         """
-        # URLと概要
-        set_agent_message(content=output.get('search_results'))
+        
+        # serp apiの検索結果を全て格納
+        set_serp_api_results(output)
+        
+        # outputの全要素数を計算
+        total_data_count = sum(len(data) for data in output)
+        results = output[0]
 
         with st.chat_message("assistant"):
-            st.markdown(output.get('search_results'))
+            from views import EstatDataSummary
+            estat_data_summary = EstatDataSummary(data=results, stat_data_index=1)
+            set_agent_message(content=estat_data_summary.get_summary())
+
+        urls = [item['link'] for item in results]
+        
+        content = {
+            "urls": urls,
+            "next_data_index": 1,
+            "total_data_count": total_data_count,
+        }
 
         # ボタン
-        if output.get('urls') and len(output.get('urls')) > 0:
+        if urls and len(urls) > 0:
             set_agent_message(
-                content=output.get('urls'),
+                content=content,
                 with_btns=True,
             )
-
-            with st.chat_message("assistant"):
-                EstatUrlBtn(output.get('urls'), len(st.session_state.messages) - 1).display_btns()
+            st.rerun()
 
     def _display_estat_data(self, output):
         """
@@ -160,12 +170,7 @@ class AgentOutput:
             display_type=DISPLAY_OPTIONS[0],
             is_stat_data=True,
         )
-
-        viewer = StatDataViewer(output, (len(st.session_state.messages) - 1))
-        viewer.process_data()
-
-        with st.chat_message("assistant"):
-            viewer.display_data()
+        st.rerun()
 
     def _display_formatted_estat_data(self):
         with st.chat_message("assistant"):
@@ -174,6 +179,4 @@ class AgentOutput:
 
     def _display_markdown_text(self, text):
         set_agent_message(content=text)
-
-        with st.chat_message("assistant"):
-            st.markdown(text)
+        st.rerun()

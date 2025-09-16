@@ -87,12 +87,56 @@ class StatDataViewer:
 
         # 単位が存在する場合のみフィルタリング
         if '単位' in self.df.columns:
-            filtered_df = self.df[self.df['単位'] == selected_unit]
+            filtered_df_unit = self.df[self.df['単位'] == selected_unit]
         else:
-            filtered_df = self.df
+            filtered_df_unit = self.df
 
         try:
+            # フィルタリング用のコンテナを作成（全表示形式で共通）
+            filter_container = st.container()
+            
+            with filter_container:
+                # 絞り込み条件とリセットボタンを横並びに配置
+                col1, col2 = st.columns([3, 1])  # カラムの幅を調整（3:1 の比率）
+                with col1:
+                    st.write("絞り込み条件")  # 左側に絞り込み条件のタイトルを表
+                with col2:
+                    if st.button("リセット", key=f"clear_filter_button_{self.key}", use_container_width=True):  # 右側にリセットボタンを配置
+                        st.session_state[f"filters_{self.key}"] = {}
+                        st.session_state[f"filtered_df_{self.key}"] = filtered_df_unit
+                filters_session = st.session_state.get(f"filters_{self.key}", {})
+                filter_columns = st.multiselect(
+                    "絞り込み対象の列を選択してください",
+                    options=filtered_df_unit.columns,
+                    default=list(filters_session.keys()),  # セッションに保存されている列をデフォルトで選択
+                    key=f"filter_columns_{self.key}",
+                )
+
+                # 値選択用のフォーム
+                with st.form(key=f"filter_form_{self.key}"):
+                    new_filters = {}
+                    for column_name in filter_columns:
+                        unique_values = filtered_df_unit[column_name].dropna().unique()
+                        selected_values = st.multiselect(
+                            f"{column_name}の値を選択してください",
+                            options=unique_values,
+                            default=filters_session.get(column_name, []),
+                            key=f"filter_values_{column_name}_{self.key}",
+                        )
+                        if selected_values:
+                            new_filters[column_name] = selected_values
+
+                    # フィルタ実行ボタン
+                    if st.form_submit_button("絞り込み実行"):
+                        filtered_df = self._apply_filters(filtered_df_unit, new_filters)
+                        st.session_state[f"filters_{self.key}"] = new_filters
+                        st.session_state[f"filtered_df_{self.key}"] = filtered_df
+
+            # フィルタリング済みデータの取得
+            filtered_df = st.session_state.get(f"filtered_df_{self.key}", filtered_df_unit)
+
             if selected_display == DISPLAY_OPTIONS[0]:
+                # テーブルを表示
                 st.dataframe(filtered_df)
             elif selected_display == DISPLAY_OPTIONS[1]:
                 self._line_chart(filtered_df)
@@ -101,8 +145,13 @@ class StatDataViewer:
             elif selected_display == DISPLAY_OPTIONS[3]:
                 self._bar_chart(filtered_df)
         except Exception as e:
-            logging.error(f"failed to display data: {e}")
+            logging.csv_error(f"failed to display data: {e}")
             st.error("グラフの表示に失敗しました。")
+
+    def _apply_filters(self, dataframe, filters):
+        for col, values in filters.items():
+            dataframe = dataframe[dataframe[col].isin(values)]
+        return dataframe
 
     def _update_session_state(self):
         # 対象メッセージがセッションに存在しない場合は処理しない
@@ -157,33 +206,13 @@ class StatDataViewer:
         if selected_color_column == selected_x_column:
             st.warning("x軸と色分けのカテゴリは異なる値を選択してください")
             return
-
+        
         # 合計を算出できるようにfloat型に変換
         data['値'] = pd.to_numeric(data['値'], errors='coerce').fillna(0).astype(float)
         # x軸および色分けによるグループ化した合計値を計算
         grouped_data = data.groupby([selected_x_column, selected_color_column])['値'].sum().reset_index()
-        # x軸のカテゴリごとの合計値を算出
-        total_by_x_column = data.groupby([selected_x_column])['値'].sum().reset_index()
-        total_by_x_column_view = total_by_x_column.copy()
-        # x軸のカテゴリごとの合計値を表示する際の数値変換
-        if (total_by_x_column['値'] >= 1e6).any():
-            total_by_x_column_view['値'] = total_by_x_column['値'].map(lambda x: f"{x / 1e6:.1f}M")
-        elif (total_by_x_column['値'] >= 1e3).any():
-            total_by_x_column_view['値'] = total_by_x_column['値'].map(lambda x: f"{x / 1e3:.1f}K")
-        else:
-            total_by_x_column_view['値'] = total_by_x_column['値'].map('{:.1f}'.format)
         # 棒グラフを作成
         fig = px.bar(grouped_data, x=selected_x_column, y=self.value_column, color=selected_color_column)
-        # x軸のカテゴリごとの合計値を棒グラフの上に表示（streamlitの機能でカテゴリ別にグラフ表示させた際に合計値が残ってしまうのためコメントアウト）
-        # for i, row in total_by_x_column_view.iterrows():
-        #    fig.add_annotation(
-        #        x=row[selected_x_column],
-        #        y=total_by_x_column.loc[i, '値'],
-        #        text=f"{row['値']}",
-        #        showarrow=False,
-        #        yshift=10,
-        #        font=dict(size=12)
-        #    )
         st.plotly_chart(fig, key=f"bar_chart_{self.key}")
 
     def set_df(self, df: pd.DataFrame):
