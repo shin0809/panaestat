@@ -8,7 +8,7 @@ LLM_OPTIONS = ["GPT-4o", "Gemini 1.5 Pro", "Claude 3.5 Sonnet"]
 SAVE_DATA_OPTIONS = ["保存する", "保存しない"]
 
 # e-Statのデータ取得上限
-DEFAULT_ESTAT_DATA_LIMIT = 100000
+DEFAULT_ESTAT_DATA_LIMIT = 500000
 
 # USD/JPYのレート
 DEFAULT_USD_JPY_RATE = 150.0
