@@ -51,7 +51,7 @@ def init_sidebar(file):
             # データ取得オプションがe-Stat　APIの場合はe-Statのデータ取得上限を設定する
             if fetch_data_type == FetchDataType.ESTAT_API.value:
                 # e-Statのデータ取得上限
-                estat_data_limit = st.sidebar.number_input("e-Statのデータ取得上限", min_value=1, value=DEFAULT_ESTAT_DATA_LIMIT, max_value=1000000, step=100000)
+                estat_data_limit = st.sidebar.number_input("e-Statのデータ取得上限", min_value=1, value=DEFAULT_ESTAT_DATA_LIMIT, max_value=100000, step=10000)
                 set_estat_data_limit(estat_data_limit)
             
             # LLM 選択
